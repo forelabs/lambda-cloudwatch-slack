@@ -25,13 +25,13 @@ change status to evicted or just get stucked (like our workers sometimes do).
 - setting up amazon-cloudwatch agent within cluster
 - use cloudwatch alarms on
   - pod restarts
-    - default
+    - default :heavy_check_mark:
     - upload :heavy_check_mark:
     - branching :heavy_check_mark:
-    - autopilot
-    - indexing-logs
-    - webhooks
-    - translation-events
+    - autopilot :heavy_check_mark:
+    - indexing-logs :heavy_check_mark:
+    - webhooks :heavy_check_mark:
+    - translation-events :heavy_check_mark:
 
 ## App Endpoint Response Time Observing
 

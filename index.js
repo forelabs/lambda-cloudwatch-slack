@@ -239,39 +239,30 @@ var handleCloudWatch = function(event, context) {
   var alarmDescription = message.AlarmDescription;
   var alarmReason = message.NewStateReason;
   var trigger = message.Trigger;
+  var namespace = message.Dimensions.find((dim) => { return dim.name === "Namespace" }).value;
+  var deployment = message.Dimensions.find((dim) => { return dim.name === "PodName" }).value;
   var color = "warning";
 
   if (message.NewStateValue === "ALARM") {
-      color = "danger";
+      if (alarmName.indexOf("Pod Restart") === -1) {
+        color = "danger";
+      }
+      else {
+        color = "warning";
+      }
   } else if (message.NewStateValue === "OK") {
       color = "good";
   }
 
   var slackMessage = {
-    text: "*" + subject + "*",
+    text: "Status: *" + newState + "*",
     attachments: [
       {
         "color": color,
         "fields": [
-          { "title": "Alarm Name", "value": alarmName, "short": true },
-          { "title": "Alarm Description", "value": alarmDescription, "short": false},
-          {
-            "title": "Trigger",
-            "value": trigger.Statistic + " "
-              + metricName + " "
-              + trigger.ComparisonOperator + " "
-              + trigger.Threshold + " for "
-              + trigger.EvaluationPeriods + " period(s) of "
-              + trigger.Period + " seconds.",
-              "short": false
-          },
-          { "title": "Old State", "value": oldState, "short": true },
-          { "title": "Current State", "value": newState, "short": true },
-          {
-            "title": "Link to Alarm",
-            "value": "https://console.aws.amazon.com/cloudwatch/home?region=" + region + "#alarm:alarmFilter=ANY;name=" + encodeURIComponent(alarmName),
-            "short": false
-          }
+          { "title": alarmName, "value": alarmDescription, "short": false },
+          { "title": "Namespace", "value": namespace, "short": true },
+          { "title": "Deployment", "value": deployment, "short": true },
         ],
         "ts":  timestamp
       }
@@ -364,7 +355,7 @@ var processEvent = function(event, context) {
   try {
     eventSnsMessage = JSON.parse(eventSnsMessageRaw);
   }
-  catch (e) {    
+  catch (e) {
   }
 
   if(eventSubscriptionArn.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsSubject.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codepipeline.match_text) > -1){
