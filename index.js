@@ -239,9 +239,12 @@ var handleCloudWatch = function(event, context) {
   var alarmDescription = message.AlarmDescription;
   var alarmReason = message.NewStateReason;
   var trigger = message.Trigger;
-  var namespace = message.Dimensions.find((dim) => { return dim.name === "Namespace" }).value;
-  var deployment = message.Dimensions.find((dim) => { return dim.name === "PodName" }).value;
+  var namespace = "unknown"
+  var deployment = "unknown"
   var color = "warning";
+
+  try { namespace = trigger.Dimensions.find((dim) => { return dim.name === "Namespace" }).value } catch { };
+  try { deployment = trigger.Dimensions.find((dim) => { return dim.name === "PodName" }).value } catch { };
 
   if (message.NewStateValue === "ALARM") {
       if (alarmName.indexOf("Pod Restart") === -1) {
