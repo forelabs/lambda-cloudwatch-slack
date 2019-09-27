@@ -362,30 +362,42 @@ var processEvent = function(event, context) {
   }
 
   if(eventSubscriptionArn.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsSubject.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codepipeline.match_text) > -1){
-    console.log("processing codepipeline notification");
-    slackMessage = handleCodePipeline(event,context)
+    if(config.services.codepipeline.enabled) {
+      console.log("processing codepipeline notification");
+      slackMessage = handleCodePipeline(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.elasticbeanstalk.match_text) > -1 || eventSnsSubject.indexOf(config.services.elasticbeanstalk.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.elasticbeanstalk.match_text) > -1){
-    console.log("processing elasticbeanstalk notification");
-    slackMessage = handleElasticBeanstalk(event,context)
+    if(config.services.elasticbeanstalk.enabled) {
+      console.log("processing elasticbeanstalk notification");
+      slackMessage = handleElasticBeanstalk(event,context);
+    }
   }
   else if(eventSnsMessage && 'AlarmName' in eventSnsMessage && 'AlarmDescription' in eventSnsMessage){
-    console.log("processing cloudwatch notification");
-    slackMessage = handleCloudWatch(event,context);
+    if(config.services.cloudwatch.enabled) {
+      console.log("processing cloudwatch notification");
+      slackMessage = handleCloudWatch(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.codedeploy.match_text) > -1 || eventSnsSubject.indexOf(config.services.codedeploy.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codedeploy.match_text) > -1){
-    console.log("processing codedeploy notification");
-    slackMessage = handleCodeDeploy(event,context);
+    if(config.services.codedeploy.enabled) {
+      console.log("processing codedeploy notification");
+      slackMessage = handleCodeDeploy(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.elasticache.match_text) > -1 || eventSnsSubject.indexOf(config.services.elasticache.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.elasticache.match_text) > -1){
-    console.log("processing elasticache notification");
-    slackMessage = handleElasticache(event,context);
+    if(config.services.elasticache.enabled) {
+      console.log("processing elasticache notification");
+      slackMessage = handleElasticache(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.autoscaling.match_text) > -1 || eventSnsSubject.indexOf(config.services.autoscaling.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.autoscaling.match_text) > -1){
-    console.log("processing autoscaling notification");
-    slackMessage = handleAutoScaling(event, context);
+    if(config.services.autoscaling.enabled) {
+      console.log("processing autoscaling notification");
+      slackMessage = handleAutoScaling(event, context);
+    }
   }
-  else{
+  else if(config.services.catchall.enabled) {
     slackMessage = handleCatchAll(event, context);
   }
 
