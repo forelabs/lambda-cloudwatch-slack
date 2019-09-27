@@ -244,10 +244,10 @@ var handleCloudWatch = function(event, context) {
   var color = "warning";
 
   try {
-    namespace = trigger.Dimensions.find(function get(dim) { return dim.name === "Namespace" }).value
+    namespace = trigger.Dimensions.find(function get(dim) { return dim.name === "Namespace" }).value;
   } catch {}
   try {
-    deployment = trigger.Dimensions.find(function get(dim) { return dim.name === "PodName" }).value
+    deployment = trigger.Dimensions.find(function get(dim) { return dim.name === "PodName" }).value;
   } catch {}
 
   if (message.NewStateValue === "ALARM") {
