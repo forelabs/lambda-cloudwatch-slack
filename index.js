@@ -239,39 +239,40 @@ var handleCloudWatch = function(event, context) {
   var alarmDescription = message.AlarmDescription;
   var alarmReason = message.NewStateReason;
   var trigger = message.Trigger;
+  var namespace = "unknown"
+  var deployment = "unknown"
   var color = "warning";
 
+  if (trigger.hasOwnProperty("Dimensions")) {
+    var namespaceDimension, deploymentDimension;
+    if(namespaceDimension = trigger.Dimensions.find(function get(dim) { return dim.name === "Namespace" })) {
+      namespace = namespaceDimension.value;
+    }
+    if(deploymentDimension = trigger.Dimensions.find(function get(dim) { return dim.name === "PodName" })) {
+      deployment = deploymentDimension.value;
+    }
+  }
+
   if (message.NewStateValue === "ALARM") {
-      color = "danger";
+      if (alarmName.indexOf("Pod Restart") === -1) {
+        color = "danger";
+      }
+      else {
+        color = "warning";
+      }
   } else if (message.NewStateValue === "OK") {
       color = "good";
   }
 
   var slackMessage = {
-    text: "*" + subject + "*",
+    text: "Status: *" + newState + "*",
     attachments: [
       {
         "color": color,
         "fields": [
-          { "title": "Alarm Name", "value": alarmName, "short": true },
-          { "title": "Alarm Description", "value": alarmDescription, "short": false},
-          {
-            "title": "Trigger",
-            "value": trigger.Statistic + " "
-              + metricName + " "
-              + trigger.ComparisonOperator + " "
-              + trigger.Threshold + " for "
-              + trigger.EvaluationPeriods + " period(s) of "
-              + trigger.Period + " seconds.",
-              "short": false
-          },
-          { "title": "Old State", "value": oldState, "short": true },
-          { "title": "Current State", "value": newState, "short": true },
-          {
-            "title": "Link to Alarm",
-            "value": "https://console.aws.amazon.com/cloudwatch/home?region=" + region + "#alarm:alarmFilter=ANY;name=" + encodeURIComponent(alarmName),
-            "short": false
-          }
+          { "title": alarmName, "value": alarmDescription, "short": false },
+          { "title": "Namespace", "value": namespace, "short": true },
+          { "title": "Deployment", "value": deployment, "short": true },
         ],
         "ts":  timestamp
       }
@@ -364,34 +365,46 @@ var processEvent = function(event, context) {
   try {
     eventSnsMessage = JSON.parse(eventSnsMessageRaw);
   }
-  catch (e) {    
+  catch (e) {
   }
 
   if(eventSubscriptionArn.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsSubject.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codepipeline.match_text) > -1){
-    console.log("processing codepipeline notification");
-    slackMessage = handleCodePipeline(event,context)
+    if(config.services.codepipeline.enabled) {
+      console.log("processing codepipeline notification");
+      slackMessage = handleCodePipeline(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.elasticbeanstalk.match_text) > -1 || eventSnsSubject.indexOf(config.services.elasticbeanstalk.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.elasticbeanstalk.match_text) > -1){
-    console.log("processing elasticbeanstalk notification");
-    slackMessage = handleElasticBeanstalk(event,context)
+    if(config.services.elasticbeanstalk.enabled) {
+      console.log("processing elasticbeanstalk notification");
+      slackMessage = handleElasticBeanstalk(event,context);
+    }
   }
   else if(eventSnsMessage && 'AlarmName' in eventSnsMessage && 'AlarmDescription' in eventSnsMessage){
-    console.log("processing cloudwatch notification");
-    slackMessage = handleCloudWatch(event,context);
+    if(config.services.cloudwatch.enabled) {
+      console.log("processing cloudwatch notification");
+      slackMessage = handleCloudWatch(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.codedeploy.match_text) > -1 || eventSnsSubject.indexOf(config.services.codedeploy.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codedeploy.match_text) > -1){
-    console.log("processing codedeploy notification");
-    slackMessage = handleCodeDeploy(event,context);
+    if(config.services.codedeploy.enabled) {
+      console.log("processing codedeploy notification");
+      slackMessage = handleCodeDeploy(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.elasticache.match_text) > -1 || eventSnsSubject.indexOf(config.services.elasticache.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.elasticache.match_text) > -1){
-    console.log("processing elasticache notification");
-    slackMessage = handleElasticache(event,context);
+    if(config.services.elasticache.enabled) {
+      console.log("processing elasticache notification");
+      slackMessage = handleElasticache(event,context);
+    }
   }
   else if(eventSubscriptionArn.indexOf(config.services.autoscaling.match_text) > -1 || eventSnsSubject.indexOf(config.services.autoscaling.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.autoscaling.match_text) > -1){
-    console.log("processing autoscaling notification");
-    slackMessage = handleAutoScaling(event, context);
+    if(config.services.autoscaling.enabled) {
+      console.log("processing autoscaling notification");
+      slackMessage = handleAutoScaling(event, context);
+    }
   }
-  else{
+  else if(config.services.catchall.enabled) {
     slackMessage = handleCatchAll(event, context);
   }
 
