@@ -243,12 +243,15 @@ var handleCloudWatch = function(event, context) {
   var deployment = "unknown"
   var color = "warning";
 
-  try {
-    namespace = trigger.Dimensions.find(function get(dim) { return dim.name === "Namespace" }).value;
-  } catch {}
-  try {
-    deployment = trigger.Dimensions.find(function get(dim) { return dim.name === "PodName" }).value;
-  } catch {}
+  if (trigger.hasOwnProperty("Dimensions")) {
+    var namespaceDimension, deploymentDimension;
+    if(namespaceDimension = trigger.Dimensions.find(function get(dim) { return dim.name === "Namespace" })) {
+      namespace = namespaceDimension.value;
+    }
+    if(deploymentDimension = trigger.Dimensions.find(function get(dim) { return dim.name === "PodName" })) {
+      deployment = deploymentDimension.value;
+    }
+  }
 
   if (message.NewStateValue === "ALARM") {
       if (alarmName.indexOf("Pod Restart") === -1) {

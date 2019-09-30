@@ -1,4 +1,4 @@
-# Cloud Watcher
+# Cloud Watcher :oncoming_police_car:
 
 The new cloud watcher will observe our infrastructure and notify us
 within the slack channel #cluster-health about different types of
